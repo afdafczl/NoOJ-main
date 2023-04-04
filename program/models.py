@@ -21,6 +21,7 @@ class Test(models.Model):
 
     Test_type = models.SmallIntegerField(verbose_name="type", choices=test_types_choices)
     #user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='User')
+    Test_text = models.TextField(verbose_name="text",default = "default")
     program = models.ForeignKey(Program, on_delete=models.CASCADE, related_name='Program')
     result_file_loc = models.CharField(max_length=100)
 

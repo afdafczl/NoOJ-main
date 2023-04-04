@@ -54,6 +54,32 @@ def query_program(request):
         return JsonResponse({"errno": "0", "msg": "query success"})
 
 
+#submit and judge
+def submit(program_giturl, type):
+
+    check_method = int(type)
+    print(check_method)
+    print(program_giturl)
+    #os.system('~/CI/scripts/pull.sh '+gitlink)
+
+    if(check_method==1):
+        #os.system('~/CI/checkstyle/check.sh')
+        with open("/home/duanu/CI/workspace/res/checkstyle.xml",'r',encoding='utf-8') as f:
+            res = f.read()
+#       print(res)
+        return res
+
+    elif(check_method==2):
+        #os.system('~/CI/findbugs/findbugsscript.sh')
+        with open("findbugs.html", 'r',encoding='utf-8') as f:
+            res = f.read()
+        return res
+
+    elif(check_method==3):
+        #os.system('~/OJ/OJ.sh')
+        return  "Accepted"
+
+#file_addr is the addr of program directory
 def cre_test(request):
     print(request.session['username'])
 
@@ -67,16 +93,26 @@ def cre_test(request):
     program = Program.objects.filter(Program_name=program_name)
     if not program.exists():
         return JsonResponse({"errno": "1001", "msg": "项目不存在"})
-
     program = program[0]
     file_addr = request.POST.get('file_addr')
     type = request.POST.get('type')
     type=int(type)
-    print(type)
-    test = Test.objects.create(Test_file_addr=file_addr, Test_type=type, program=program, result_file_loc="/static")
+
+    text = submit(program_giturl=program.Program_giturl,type=type)
+
+    #print(type)
+    test = Test.objects.create(Test_file_addr=file_addr, Test_type=type, program=program, result_file_loc="/static", Test_text =text)
     test.save()
     return JsonResponse({"errno": "0", "msg": "cre test success"})
 
+
+def get_text_list(program ):
+    tests = Test.objects.filter(program=program)
+    result = []
+    for test in tests:
+        #print(test)
+        result.append({"test_id": test.Test_id, "test_tyoe": test.Test_type, "test_text": test.Test_text})
+    return result
 
 def query_test(request):
 
@@ -94,6 +130,5 @@ def query_test(request):
         return JsonResponse({"errno": "1001", "msg": "项目不存在"})
 
     program = program[0]
-    test = Test.objects.filter(program=program)
 
-    return JsonResponse({"errno": "0", "msg": "query test success"})
+    return JsonResponse({"errno": "0", "msg": "query test success", "res":get_text_list(program) })
